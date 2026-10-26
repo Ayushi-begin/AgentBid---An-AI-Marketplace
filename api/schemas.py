@@ -1,21 +1,26 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from decimal import Decimal
 
 # --- User Schemas ---
 class UserBase(BaseModel):
-    wallet_address: str = Field(..., example="0x71C8363820F8031971300a20824b942f73AC2023")
-    display_name: Optional[str] = Field(None, example="Alice (Data Scientist)")
+    wallet_address: str = Field(..., examples=["0x71C8363820F8031971300a20824b942f73AC2023"])
+    display_name: Optional[str] = Field(None, examples=["Alice (Data Scientist)"])
 
 class UserResponse(UserBase):
     id: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Agent Schemas ---
+class AgentCreateRequest(BaseModel):
+    name: str = Field(..., min_length=3, max_length=100, examples=["DeepSeek-Analyzer-V1"])
+    archetype: str = Field("BALANCED", examples=["BALANCED", "AGGRESSIVE", "CONSERVATIVE"])
+    description: Optional[str] = Field(None, examples=["High precision anomaly detection agent"])
+    capabilities: List[str] = Field(default_factory=lambda: ["data_analysis"])
+    wallet_address: str = Field(..., examples=["0x4444444444444444444444444444444444444444"])
+
 class AgentResponse(BaseModel):
     id: str
     name: str
@@ -27,27 +32,25 @@ class AgentResponse(BaseModel):
     reputation_score: float
     settled_tasks_count: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Task Schemas ---
 class TaskCreate(BaseModel):
-    title: str = Field(..., min_length=5, max_length=255, example="Analyze a CSV dataset and detect anomalies")
-    task_type: str = Field(..., example="data_analysis")
-    description: str = Field(..., min_length=10, example="Examine the dataset, calculate descriptive stats, find top 3 anomalies.")
-    budget: str = Field(..., example="0.015", description="Agreed maximum budget in ETH")
-    currency: str = Field("TEST_ETH", example="TEST_ETH")
+    title: str = Field(..., min_length=5, max_length=255, examples=["Analyze a CSV dataset and detect anomalies"])
+    task_type: str = Field(..., examples=["data_analysis"])
+    description: str = Field(..., min_length=10, examples=["Examine the dataset, calculate descriptive stats, find top 3 anomalies."])
+    budget: str = Field(..., examples=["0.015"], description="Agreed maximum budget in ETH")
+    currency: str = Field("TEST_ETH", examples=["TEST_ETH"])
     deadline: datetime = Field(..., description="UTC deadline")
     acceptance_criteria: List[str] = Field(
         default_factory=list,
-        example=[
+        examples=[[
             "Return top 3 detected anomalies with row indices",
             "Provide clear descriptive statistics summary",
             "Return valid JSON structure plus markdown report"
-        ]
+        ]]
     )
-    dataset_url: Optional[str] = Field(None, example="https://raw.githubusercontent.com/datasets/sample.csv")
+    dataset_url: Optional[str] = Field(None, examples=["https://raw.githubusercontent.com/datasets/sample.csv"])
     client_wallet: Optional[str] = Field("0x71C8363820F8031971300a20824b942f73AC2023")
 
     @field_validator("budget")
@@ -76,9 +79,7 @@ class TaskResponse(BaseModel):
     selected_bid_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Bid Schemas ---
 class BidResponse(BaseModel):
@@ -97,9 +98,7 @@ class BidResponse(BaseModel):
     score_breakdown: Dict[str, Any]
     status: str
     submitted_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SelectAgentRequest(BaseModel):
     bid_id: str
@@ -110,8 +109,8 @@ class FundTaskRequest(BaseModel):
 
 # --- Delivery Schemas ---
 class DeliveryCreate(BaseModel):
-    result_uri: str = Field(..., example="s3://agentbid-storage/task_output.json")
-    summary: Optional[str] = Field(None, example="Processed 5,000 rows. Found 3 anomalies.")
+    result_uri: str = Field(..., examples=["s3://agentbid-storage/task_output.json"])
+    summary: Optional[str] = Field(None, examples=["Processed 5,000 rows. Found 3 anomalies."])
     output_data: Dict[str, Any] = Field(default_factory=dict)
 
 class DeliveryResponse(BaseModel):
@@ -125,18 +124,20 @@ class DeliveryResponse(BaseModel):
     verification_status: str
     verification_report: Dict[str, Any]
     submitted_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Review & Dispute Schemas ---
 class ApproveTaskRequest(BaseModel):
     feedback_rating: int = Field(5, ge=1, le=5)
-    comments: Optional[str] = Field(None, example="Excellent execution ahead of time.")
+    comments: Optional[str] = Field(None, examples=["Excellent execution ahead of time."])
 
 class DisputeTaskRequest(BaseModel):
-    reason: str = Field(..., min_length=5, example="Output is missing key required anomaly columns.")
+    reason: str = Field(..., min_length=5, examples=["Output is missing key required anomaly columns."])
     evidence_uri: Optional[str] = None
+
+class ResolveDisputeRequest(BaseModel):
+    outcome: str = Field(..., examples=["PAY_AGENT", "REFUND_CLIENT", "SPLIT_50_50"])
+    reviewer_notes: Optional[str] = Field(None, examples=["Deliverable verified to meet 2 of 3 criteria; 50/50 split agreed."])
 
 # --- Transaction Schemas ---
 class TransactionResponse(BaseModel):
@@ -152,6 +153,4 @@ class TransactionResponse(BaseModel):
     status: str
     block_number: Optional[int]
     confirmed_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

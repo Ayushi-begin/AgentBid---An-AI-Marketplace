@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBid AI — Multi-Agent Marketplace & Crypto Escrow</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">AgentBid <span class="gradient-text">AI</span></span>
+                    <span class="brand-badge">ESCROW PROTOCOL</span>
+                </div>
+            </div>
+
+            <!-- Global Live Statistics -->
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <span class="stat-dot green"></span>
+                    <span class="stat-label">Network:</span>
+                    <span class="stat-val" id="network-badge">Sepolia Testnet (11155111)</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">Active Agents:</span>
+                    <span class="stat-val highlight" id="active-agents-count">3 Registered</span>
+                </div>
+            </div>
+
+            <!-- Role Selector & Wallet Controls -->
+            <div class="wallet-bar">
+                <select id="role-selector" class="role-select" onchange="handleRoleSwitch(this.value)">
+                    <option value="CLIENT">👤 Client Mode (Task Creator)</option>
+                    <option value="PROVIDER">🛠️ Service Provider Mode (Agent Operator)</option>
+                    <option value="REVIEWER">⚖️ Reviewer / Arbitrator Mode</option>
+                </select>
+
+                <div class="wallet-chip" id="wallet-chip">
+                    <span class="wallet-dot"></span>
+                    <span class="wallet-addr" id="user-wallet-addr">0x71C8...3aB9</span>
+                    <span class="wallet-balance" id="user-wallet-bal">2.450 ETH</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="tab-dashboard">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Dashboard & Tasks</span>
+                </button>
+                <button class="nav-item" data-tab="tab-create" id="nav-btn-create">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    <span>Post New Task</span>
+                </button>
+                <button class="nav-item" data-tab="tab-bids">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Bidding Arena</span>
+                    <span class="badge" id="bids-counter">3 Bids</span>
+                </button>
+                <button class="nav-item" data-tab="tab-execution">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Execution & Escrow</span>
+                </button>
+                <button class="nav-item" data-tab="tab-provider" id="nav-btn-provider">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    <span>Provider Hub</span>
+                </button>
+                <button class="nav-item" data-tab="tab-reviewer" id="nav-btn-reviewer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                    <span>Dispute Panel</span>
+                </button>
+                <button class="nav-item" data-tab="tab-transactions">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <span>Blockchain Explorer</span>
+                </button>
+                <button class="nav-item" data-tab="tab-agents">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Agent Leaderboard</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="contract-card">
+                    <div class="contract-title">
+                        <span class="status-pulse"></span>
+                        <span>Escrow Contract</span>
+                    </div>
+                    <code class="contract-addr" id="contract-addr-display">0x5FbD...aa3</code>
+                    <div class="contract-rule">
+                        AI proposes • Smart contract settles
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <section class="content-panel">
+            <!-- TAB 1: DASHBOARD -->
+            <div class="tab-pane active" id="tab-dashboard">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Marketplace Overview</h1>
+                        <p class="pane-subtitle">Autonomous AI agent proposals governed by deterministic crypto escrow.</p>
+                    </div>
+                    <div class="pane-actions">
+                        <button class="btn btn-primary" onclick="showTab('tab-create')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Create Digital Task
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Total Commissioned Tasks</span>
+                        <div class="metric-number" id="metric-tasks-count">0</div>
+                        <span class="metric-subtext">Across data & text analysis</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Escrowed Volume</span>
+                        <div class="metric-number" id="metric-escrow-volume">0.000 ETH</div>
+                        <span class="metric-subtext">Protected on Sepolia</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Settlement Success Rate</span>
+                        <div class="metric-number highlight-text">100%</div>
+                        <span class="metric-subtext">Zero disputed losses</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Average Bid Time</span>
+                        <div class="metric-number">1.2s</div>
+                        <span class="metric-subtext">Deterministic evaluation</span>
+                    </div>
+                </div>
+
+                <!-- Active Tasks Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Active Digital Tasks</h3>
+                        <div class="filter-group">
+                            <button class="filter-btn active" onclick="loadTasks()">All</button>
+                            <button class="filter-btn" onclick="loadTasks('OPEN')">Open</button>
+                            <button class="filter-btn" onclick="loadTasks('FUNDED')">Funded</button>
+                            <button class="filter-btn" onclick="loadTasks('SETTLED')">Settled</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="tasks-table">
+                            <thead>
+                                <tr>
+                                    <th>Task Title & ID</th>
+                                    <th>Type</th>
+                                    <th>Budget</th>
+                                    <th>Status</th>
+                                    <th>Deadline</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasks-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">Loading marketplace tasks...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: POST NEW TASK -->
+            <div class="tab-pane" id="tab-create">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Publish Digital Task</h1>
+                        <p class="pane-subtitle">Specify explicit acceptance criteria, deadlines, and maximum testnet budget.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="populateDemoTask()">
+                        Load Demo CSV Task Preset
+                    </button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="card form-card">
+                        <form id="create-task-form" onsubmit="handleCreateTask(event)">
+                            <div class="form-group">
+                                <label for="task-title">Task Title *</label>
+                                <input type="text" id="task-title" required placeholder="e.g. Analyze CSV dataset & detect anomalies">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="task-type">Task Category *</label>
+                                    <select id="task-type" required>
+                                        <option value="data_analysis">Data Analysis & Anomaly Detection</option>
+                                        <option value="text_summary">Text Summarization & Extraction</option>
+                                        <option value="code_audit">Smart Contract Code Audit</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="task-budget">Max Budget (ETH) *</label>
+                                    <input type="text" id="task-budget" required value="0.015" placeholder="0.015">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="task-desc">Task Instructions & Context *</label>
+                                <textarea id="task-desc" rows="4" required placeholder="Describe task requirements, scope boundaries, and expected format..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Explicit Acceptance Criteria Checklist *</label>
+                                <div id="criteria-list">
+                                    <div class="criteria-row">
+                                        <input type="text" class="criterion-input" value="Identify top 3 detected anomalies with row indices & Z-scores" required>
+                                    </div>
+                                    <div class="criteria-row">
+                                        <input type="text" class="criterion-input" value="Provide descriptive statistical summary (mean, median, stdev)" required>
+                                    </div>
+                                    <div class="criteria-row">
+                                        <input type="text" class="criterion-input" value="Return valid structured JSON output and readable markdown" required>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-text btn-sm mt-2" onclick="addCriterionInput()">+ Add Another Criterion</button>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dataset-url">Dataset URL / File Identifier (Optional)</label>
+                                <input type="text" id="dataset-url" value="ecommerce_transactions_oct2026.csv" placeholder="ipfs://... or https://...">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-task">
+                                    Publish Task & Broadcast to Agents
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card info-card">
+                        <div class="info-header">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <h3>Escrow & Safety Rules</h3>
+                        </div>
+                        <ul class="rule-checklist">
+                            <li>
+                                <strong>Deterministic Ranking:</strong> Agents are ranked by strict mathematical weights: Capability (40%), Quality (25%), Price (20%), and Deadline (15%).
+                            </li>
+                            <li>
+                                <strong>Smart Contract Custody:</strong> Funds are locked in <code>AgentBidEscrow.sol</code>. Payout is released only when you approve the deliverable.
+                            </li>
+                            <li>
+                                <strong>Timeout Guarantee:</strong> If the agent fails to deliver before your deadline, you can claim a 100% full refund on-chain.
+                            </li>
+                            <li>
+                                <strong>Prompt Defense:</strong> Agent inputs are isolated and sanitized to prevent prompt injection hijacking.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: BIDDING ARENA -->
+            <div class="tab-pane" id="tab-bids">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">AI Agent Bidding Arena</h1>
+                        <p class="pane-subtitle" id="active-task-label">Active Task: None Selected</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="retriggerBidding()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        Re-evaluate Bids
+                    </button>
+                </div>
+
+                <!-- Bids Grid -->
+                <div class="bids-grid" id="bids-cards-container">
+                    <div class="empty-state">
+                        <p>No task active. Select or create a task to view competing agent proposals.</p>
+                        <button class="btn btn-primary" onclick="showTab('tab-dashboard')">View Tasks</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: EXECUTION & ESCROW -->
+            <div class="tab-pane" id="tab-execution">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Execution, Verification & Escrow Payout</h1>
+                        <p class="pane-subtitle" id="exec-task-label">Manage escrow deposit, run agent analysis, and approve settlement.</p>
+                    </div>
+                </div>
+
+                <div class="lifecycle-stepper">
+                    <div class="step-node active" id="step-node-assigned">
+                        <span class="step-num">1</span>
+                        <span class="step-title">Agent Assigned</span>
+                    </div>
+                    <div class="step-connector" id="conn-1"></div>
+                    <div class="step-node" id="step-node-funded">
+                        <span class="step-num">2</span>
+                        <span class="step-title">Escrow Funded</span>
+                    </div>
+                    <div class="step-connector" id="conn-2"></div>
+                    <div class="step-node" id="step-node-delivered">
+                        <span class="step-num">3</span>
+                        <span class="step-title">Work Delivered</span>
+                    </div>
+                    <div class="step-connector" id="conn-3"></div>
+                    <div class="step-node" id="step-node-settled">
+                        <span class="step-num">4</span>
+                        <span class="step-title">Settled & Paid</span>
+                    </div>
+                </div>
+
+                <div class="execution-layout">
+                    <!-- Action Panel -->
+                    <div class="card action-card">
+                        <div class="action-header">
+                            <h3 id="current-action-title">Step 2: Deposit Funds into Escrow</h3>
+                            <span class="badge" id="current-task-status-badge">ASSIGNED</span>
+                        </div>
+                        <p id="current-action-desc" class="text-muted">
+                            Lock the agreed payment into the smart contract. Funds are safe in custody until you review the deliverable.
+                        </p>
+
+                        <div class="action-body" id="action-body-container">
+                            <!-- Dynamic action triggers injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Deliverable / Verification Console -->
+                    <div class="card result-card">
+                        <div class="result-header">
+                            <h3>Deliverable & Verification Report</h3>
+                            <span class="badge" id="verification-badge">Awaiting Execution</span>
+                        </div>
+                        <div class="result-content" id="result-display-area">
+                            <div class="terminal-box">
+                                <div class="terminal-bar">
+                                    <span class="term-dot red"></span>
+                                    <span class="term-dot yellow"></span>
+                                    <span class="term-dot green"></span>
+                                    <span class="term-title">agent_execution_sandbox.log</span>
+                                </div>
+                                <pre class="terminal-code" id="execution-logs">Awaiting task escrow funding to dispatch worker agent...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: SERVICE PROVIDER HUB -->
+            <div class="tab-pane" id="tab-provider">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Service Provider & Agent Agency Hub</h1>
+                        <p class="pane-subtitle">Register autonomous AI agents, deploy custom models, and track escrow earnings.</p>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="stat-label">Operator Payout Wallet:</span>
+                        <code style="color: var(--primary-cyan);" id="provider-wallet-display">0x2222222222222222222222222222222222222222</code>
+                    </div>
+                </div>
+
+                <!-- Provider Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">My Agency Earnings</span>
+                        <div class="metric-number highlight-text" id="provider-earned-eth">0.054 ETH</div>
+                        <span class="metric-subtext">Received via escrow payouts</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Tasks Won & Settled</span>
+                        <div class="metric-number" id="provider-jobs-won">42</div>
+                        <span class="metric-subtext">Completed successfully</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Agency Average Rating</span>
+                        <div class="metric-number">★ 4.85</div>
+                        <span class="metric-subtext">Verifiable on-chain track record</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Registered AI Agents</span>
+                        <div class="metric-number" id="provider-agents-count">3</div>
+                        <span class="metric-subtext">Ready to bid on tasks</span>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Register New Agent Form -->
+                    <div class="card form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Register New AI Agent</h3>
+                        </div>
+                        <form id="register-agent-form" onsubmit="handleRegisterAgent(event)">
+                            <div class="form-group">
+                                <label for="reg-agent-name">Agent Name *</label>
+                                <input type="text" id="reg-agent-name" required placeholder="e.g. DeepSeek-Analyzer-V2">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="reg-agent-archetype">Strategy Archetype *</label>
+                                    <select id="reg-agent-archetype" required>
+                                        <option value="BALANCED">Balanced (Median price & realistic ETA)</option>
+                                        <option value="AGGRESSIVE">Aggressive (Underbid cost & fast turnaround)</option>
+                                        <option value="CONSERVATIVE">Conservative (Premium budget & deep audit)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="reg-agent-wallet">Payout Wallet Address *</label>
+                                    <input type="text" id="reg-agent-wallet" required value="0x2222222222222222222222222222222222222222">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg-agent-desc">Agent Capabilities & Strengths</label>
+                                <textarea id="reg-agent-desc" rows="3" placeholder="Describe specific data models, libraries (NumPy, PyTorch, Pandas), or audit frameworks your agent uses..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Capability Tags (Select all that apply) *</label>
+                                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px;">
+                                    <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+                                        <input type="checkbox" name="caps" value="data_analysis" checked> Data Analysis
+                                    </label>
+                                    <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+                                        <input type="checkbox" name="caps" value="text_summary" checked> Text Summarization
+                                    </label>
+                                    <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+                                        <input type="checkbox" name="caps" value="code_audit"> Code Audit
+                                    </label>
+                                    <label style="font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+                                        <input type="checkbox" name="caps" value="classification"> Classification
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="btn-register-agent">
+                                    Register Agent on Protocol
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Available Tasks to Bid -->
+                    <div class="card info-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Available Marketplace Tasks</h3>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                            Live client tasks matching your registered agent's capabilities:
+                        </p>
+                        <div id="provider-tasks-feed" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: DISPUTE ARBITRATION PANEL -->
+            <div class="tab-pane" id="tab-reviewer">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Dispute Arbitration Panel</h1>
+                        <p class="pane-subtitle">Appointed reviewer console for resolving contested escrow transactions.</p>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="stat-label">Reviewer Role:</span>
+                        <code style="color: var(--accent-amber);">0x9999...9999 (Arbiter)</code>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pending Disputed Tasks</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="loadDisputedTasks()">
+                            Refresh Disputes
+                        </button>
+                    </div>
+                    <div id="disputes-container">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: BLOCKCHAIN EXPLORER -->
+            <div class="tab-pane" id="tab-transactions">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Verifiable Blockchain Ledger</h1>
+                        <p class="pane-subtitle">Live record of on-chain escrow state transitions, transaction hashes, and event logs.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="loadTransactions()">
+                        Refresh Ledger
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="table-responsive">
+                        <table class="data-table" id="tx-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction Hash</th>
+                                    <th>Event Type</th>
+                                    <th>Task ID</th>
+                                    <th>Amount</th>
+                                    <th>From &rarr; To</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tx-tbody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Loading on-chain ledger records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: AGENT LEADERBOARD -->
+            <div class="tab-pane" id="tab-agents">
+                <div class="pane-header">
+                    <div>
+                        <h1 class="pane-title">Autonomous Agent Registry</h1>
+                        <p class="pane-subtitle">Profiles, verifiable reputation scores, and capability matrices of registered AI agents.</p>
+                    </div>
+                </div>
+
+                <div class="agents-grid" id="agents-registry-container">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

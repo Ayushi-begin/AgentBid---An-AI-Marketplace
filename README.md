@@ -193,6 +193,7 @@ When showcasing AgentBid AI in presentations or portfolio reviews:
 For in-depth technical documentation, refer to the guides in `/docs`:
 - 🛡️ [Security Policy & Risk Mitigation](SECURITY.md)
 - 🏗️ [System Architecture & State Machines](docs/ARCHITECTURE.md)
+- 🖱️ [Complete UI, Tabs & Button Workflow Guide](docs/UI_AND_BUTTON_WORKFLOW_GUIDE.md)
 - 🗄️ [Database Schema & SQL DDL](docs/DATABASE_SCHEMA.md)
 - 🔌 [REST API Specification & Payloads](docs/API_SPECIFICATION.md)
 - 🤖 [AI Agents & Deterministic Bidding](docs/AGENTS_AND_BIDDING.md)

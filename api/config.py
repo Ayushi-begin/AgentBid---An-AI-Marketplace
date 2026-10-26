@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 class Settings(BaseSettings):
@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     
     # Database Settings
-    # Supports PostgreSQL or fallback SQLite for zero-friction local testing
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./agentbid.db")
     
     # Redis Settings
@@ -30,8 +29,9 @@ class Settings(BaseSettings):
             return ["*"]
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 settings = Settings()
